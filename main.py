@@ -218,7 +218,11 @@ def build_vacancies_data(vacancies_getter: Callable, predict_salary: Callable) -
 
         data[language]["vacancies_found"] = vacancies["found"]
         data[language]["vacancies_processed"] = vacancies_processed_count
-        data[language]["average_salary"] = int(total_sum_salary / vacancies_processed_count)
+
+        if vacancies_processed_count > 0:
+            data[language]["average_salary"] = int(total_sum_salary / vacancies_processed_count)
+        else:
+            data[language]["average_salary"] = 0
 
     return data
 
