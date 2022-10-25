@@ -88,7 +88,7 @@ def get_sj_salaries_by_language(language, period=None):
     programming_catalog_id = 48
     vacancy_on_page_count = 100
 
-    endpoint = urllib.parse.urljoin(BASE_SJ_URL, '2.0/vacancies/?t=4&catalogues=48')
+    endpoint = urllib.parse.urljoin(BASE_SJ_URL, '2.0/vacancies')
     sj_salaries = {
         "found": None,
         "items": [],
@@ -231,11 +231,11 @@ def get_vacancies_stat(salary_getter: Callable, predict_salary: Callable) -> dic
 
 
 def main():
-    try:
-        hh_stat = get_vacancies_stat(get_hh_salaries_by_language, predict_rub_salary_hh)
-        print_beautiful_table(hh_stat, "HeadHunter Moscow")
-    except HTTPError:
-        print("При сборе статистики на сайте HH произошла ошибка!")
+    # try:
+    #     hh_stat = get_vacancies_stat(get_hh_salaries_by_language, predict_rub_salary_hh)
+    #     print_beautiful_table(hh_stat, "HeadHunter Moscow")
+    # except HTTPError:
+    #     print("При сборе статистики на сайте HH произошла ошибка!")
 
     try:
         sj_stat = get_vacancies_stat(get_sj_salaries_by_language, predict_rub_salary_sj)
