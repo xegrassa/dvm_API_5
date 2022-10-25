@@ -1,10 +1,14 @@
+import os
 import urllib.parse
 from collections import defaultdict
 from typing import Callable
 
 import requests
+from dotenv import load_dotenv
 from requests import HTTPError
 from terminaltables import SingleTable
+
+load_dotenv()
 
 LANGUAGES = (
     "TypeScript",
@@ -25,6 +29,7 @@ LANGUAGES = (
 
 BASE_HH_URL = "https://api.hh.ru"
 BASE_SJ_URL = "https://api.superjob.ru"
+SJ_TOKEN = os.getenv("SJ_TOKEN")
 
 
 def get_hh_salaries_by_language(language, period=30):
@@ -88,14 +93,14 @@ def get_sj_salaries_by_language(language, period=None):
     programming_catalog_id = 48
     vacancy_on_page_count = 100
 
-    endpoint = urllib.parse.urljoin(BASE_SJ_URL, '2.0/vacancies')
+    endpoint = urllib.parse.urljoin(BASE_SJ_URL, "2.0/vacancies")
     sj_salaries = {
         "found": None,
         "items": [],
     }
 
     headers = {
-        "X-Api-App-Id": "v3.r.136827077.a11a4695bc8dc8f5a263d778277d332d301d50c9.7fd0adefc9ccd7460f1058c70c4521572779d339",
+        "X-Api-App-Id": SJ_TOKEN,
     }
 
     page = 0
@@ -113,8 +118,8 @@ def get_sj_salaries_by_language(language, period=None):
         found_vacancies = response.json()
 
         vacancy_salaries = [{"payment_from": vacancy["payment_from"],
-                      "payment_to": vacancy["payment_to"],
-                      "town": vacancy["town"]["title"]} for vacancy in found_vacancies["objects"]]
+                             "payment_to": vacancy["payment_to"],
+                             "town": vacancy["town"]["title"]} for vacancy in found_vacancies["objects"]]
 
         sj_salaries["items"].extend(vacancy_salaries)
         sj_salaries["found"] = found_vacancies["total"]
@@ -231,17 +236,18 @@ def get_vacancies_stat(salary_getter: Callable, predict_salary: Callable) -> dic
 
 
 def main():
-    # try:
-    #     hh_stat = get_vacancies_stat(get_hh_salaries_by_language, predict_rub_salary_hh)
-    #     print_beautiful_table(hh_stat, "HeadHunter Moscow")
-    # except HTTPError:
-    #     print("При сборе статистики на сайте HH произошла ошибка!")
+    try:
+        hh_stat = get_vacancies_stat(get_hh_salaries_by_language, predict_rub_salary_hh)
+        print_beautiful_table(hh_stat, "HeadHunter Moscow")
+    except HTTPError:
+        print("При сборе статистики на сайте HH произошла ошибка!")
 
     try:
         sj_stat = get_vacancies_stat(get_sj_salaries_by_language, predict_rub_salary_sj)
         print_beautiful_table(sj_stat, "SuperJob Moscow")
     except HTTPError:
         print("При сборе статистики на сайте SJ произошла ошибка!")
+
 
 if __name__ == '__main__':
     main()
