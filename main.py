@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Callable
 
 import requests
+from requests import HTTPError
 from terminaltables import SingleTable
 
 LANGUAGES = (
@@ -57,6 +58,7 @@ def get_hh_vacancies(language, period=30):
             "page": page,
         }
         response = requests.get(url=endpoint, params=payload)
+        response.raise_for_status()
 
         found_vacancies = response.json()
         vacancies = [vacancy["salary"] for vacancy in found_vacancies["items"]]
@@ -106,6 +108,7 @@ def get_sj_vacancies(language, period=None):
             "page": page,
         }
         response = requests.get(url=endpoint, headers=headers, params=payload)
+        response.raise_for_status()
 
         found_vacancies = response.json()
 
@@ -228,12 +231,17 @@ def get_vacancies_stat(vacancies_getter: Callable, predict_salary: Callable) -> 
 
 
 def main():
-    hh_stat = get_vacancies_stat(get_hh_vacancies, predict_rub_salary_hh)
-    sj_stat = get_vacancies_stat(get_sj_vacancies, predict_rub_salary_sj)
+    try:
+        hh_stat = get_vacancies_stat(get_hh_vacancies, predict_rub_salary_hh)
+        print_beautiful_table(hh_stat, "HeadHunter Moscow")
+    except HTTPError:
+        print("При сборе статистики на сайте HH произошла ошибка!")
 
-    print_beautiful_table(hh_stat, "HeadHunter Moscow")
-    print_beautiful_table(sj_stat, "SuperJob Moscow")
-
+    try:
+        sj_stat = get_vacancies_stat(get_sj_vacancies, predict_rub_salary_sj)
+        print_beautiful_table(sj_stat, "SuperJob Moscow")
+    except HTTPError:
+        print("При сборе статистики на сайте SJ произошла ошибка!")
 
 if __name__ == '__main__':
     main()
