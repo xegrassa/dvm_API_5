@@ -41,7 +41,7 @@ def get_hh_vacancies(language, period=30):
     PROGRAMMING_ROLE_ID = 96  # "Программист, разработчик"
 
     endpoint = urllib.parse.urljoin(BASE_HH_URL, 'vacancies')
-    result = {
+    hh_vacancies = {
         "found": None,
         "items": [],
     }
@@ -58,17 +58,17 @@ def get_hh_vacancies(language, period=30):
         }
         response = requests.get(url=endpoint, params=payload)
 
-        hh_data = response.json()
-        vacancies = [vacancy["salary"] for vacancy in hh_data["items"]]
+        found_vacancies = response.json()
+        vacancies = [vacancy["salary"] for vacancy in found_vacancies["items"]]
 
-        result["items"].extend(vacancies)
-        result["found"] = hh_data["found"]
+        hh_vacancies["items"].extend(vacancies)
+        hh_vacancies["found"] = found_vacancies["found"]
 
         page += 1
-        if page >= hh_data["pages"]:
+        if page >= found_vacancies["pages"]:
             break
 
-    return result
+    return hh_vacancies
 
 
 def get_sj_vacancies(language, period=None):
@@ -87,7 +87,7 @@ def get_sj_vacancies(language, period=None):
     VACANCY_ON_PAGE_COUNT = 100
 
     endpoint = urllib.parse.urljoin(BASE_SJ_URL, '2.0/vacancies/?t=4&catalogues=48')
-    result = {
+    sj_vacancies = {
         "found": None,
         "items": [],
     }
@@ -107,20 +107,20 @@ def get_sj_vacancies(language, period=None):
         }
         response = requests.get(url=endpoint, headers=headers, params=payload)
 
-        sj_data = response.json()
+        found_vacancies = response.json()
 
         vacancies = [{"payment_from": vacancy["payment_from"],
                       "payment_to": vacancy["payment_to"],
-                      "town": vacancy["town"]["title"]} for vacancy in sj_data["objects"]]
+                      "town": vacancy["town"]["title"]} for vacancy in found_vacancies["objects"]]
 
-        result["items"].extend(vacancies)
-        result["found"] = sj_data["total"]
+        sj_vacancies["items"].extend(vacancies)
+        sj_vacancies["found"] = found_vacancies["total"]
 
-        if sj_data["more"] is False:
+        if found_vacancies["more"] is False:
             break
         page += 1
 
-    return result
+    return sj_vacancies
 
 
 def predict_rub_salary(salary_from, salary_to):
@@ -199,7 +199,7 @@ def print_beautiful_table(table_data, title):
     print(table_instance.table)
 
 
-def build_vacancies_data(vacancies_getter: Callable, predict_salary: Callable) -> dict:
+def get_vacancies_stat(vacancies_getter: Callable, predict_salary: Callable) -> dict:
     """Создает структуру данных о языке прграммирования.
 
     Сколько таких вакансий найдено, сколько имеют данные о зарплате, средняя ЗП по языку.
@@ -208,7 +208,7 @@ def build_vacancies_data(vacancies_getter: Callable, predict_salary: Callable) -
         vacancies_getter: Функция для получения данных о вакансиях какого либо сайта
         predict_salary: Функция подсчета средней зарплаты вакансии с сайта
     """
-    data = defaultdict(dict)
+    vacancy_statistics = defaultdict(dict)
     for language in LANGUAGES:
         vacancies = vacancies_getter(language, period=30)
         vacancies_with_salary = list(filter(None, map(predict_salary, vacancies["items"])))
@@ -216,23 +216,23 @@ def build_vacancies_data(vacancies_getter: Callable, predict_salary: Callable) -
         vacancies_processed_count = len(vacancies_with_salary)
         total_sum_salary = sum(vacancies_with_salary)
 
-        data[language]["vacancies_found"] = vacancies["found"]
-        data[language]["vacancies_processed"] = vacancies_processed_count
+        vacancy_statistics[language]["vacancies_found"] = vacancies["found"]
+        vacancy_statistics[language]["vacancies_processed"] = vacancies_processed_count
 
         if vacancies_processed_count > 0:
-            data[language]["average_salary"] = int(total_sum_salary / vacancies_processed_count)
+            vacancy_statistics[language]["average_salary"] = int(total_sum_salary / vacancies_processed_count)
         else:
-            data[language]["average_salary"] = 0
+            vacancy_statistics[language]["average_salary"] = 0
 
-    return data
+    return vacancy_statistics
 
 
 def main():
-    hh_data = build_vacancies_data(get_hh_vacancies, predict_rub_salary_hh)
-    sj_data = build_vacancies_data(get_sj_vacancies, predict_rub_salary_sj)
+    hh_stat = get_vacancies_stat(get_hh_vacancies, predict_rub_salary_hh)
+    sj_stat = get_vacancies_stat(get_sj_vacancies, predict_rub_salary_sj)
 
-    print_beautiful_table(hh_data, "HeadHunter Moscow")
-    print_beautiful_table(sj_data, "SuperJob Moscow")
+    print_beautiful_table(hh_stat, "HeadHunter Moscow")
+    print_beautiful_table(sj_stat, "SuperJob Moscow")
 
 
 if __name__ == '__main__':
