@@ -37,8 +37,8 @@ def get_hh_vacancies(language, period=30):
         dict: "found": кол-во найденных вакансий,
               "items": зарплаты вакансий
     """
-    MOSCOW_ID = 1
-    PROGRAMMING_ROLE_ID = 96  # "Программист, разработчик"
+    moscow_id = 1
+    programming_role_id = 96  # "Программист, разработчик"
 
     endpoint = urllib.parse.urljoin(BASE_HH_URL, 'vacancies')
     hh_vacancies = {
@@ -49,8 +49,8 @@ def get_hh_vacancies(language, period=30):
     page = 0
     while True:
         payload = {
-            "professional_role": PROGRAMMING_ROLE_ID,
-            "area": MOSCOW_ID,
+            "professional_role": programming_role_id,
+            "area": moscow_id,
             "period": period,
             "text": f"Программист {language}",
             "per_page": 100,
@@ -82,9 +82,9 @@ def get_sj_vacancies(language, period=None):
         dict: "found": кол-во найденных вакансий,
               "items": зарплаты вакансий
     """
-    MOSCOW_ID = 4
-    PROGRAMMING_CATALOG_ID = 48
-    VACANCY_ON_PAGE_COUNT = 100
+    moscow_id = 4
+    programming_catalog_id = 48
+    vacancy_on_page_count = 100
 
     endpoint = urllib.parse.urljoin(BASE_SJ_URL, '2.0/vacancies/?t=4&catalogues=48')
     sj_vacancies = {
@@ -99,10 +99,10 @@ def get_sj_vacancies(language, period=None):
     page = 0
     while True:
         payload = {
-            "t": MOSCOW_ID,
-            "catalogues": PROGRAMMING_CATALOG_ID,
+            "t": moscow_id,
+            "catalogues": programming_catalog_id,
             "keyword": f"Программист {language}",
-            "count": VACANCY_ON_PAGE_COUNT,
+            "count": vacancy_on_page_count,
             "page": page,
         }
         response = requests.get(url=endpoint, headers=headers, params=payload)
