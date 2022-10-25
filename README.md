@@ -12,6 +12,11 @@ cd dvm_API_5
 pip install -r requirements.txt
 ```
 
+Для работы в корне проекта создайте файл **.env** и получить [SuperJob TOKEN](https://api.superjob.ru/)
+```
+SJ_TOKEN=Ваш_токен_от_SJ
+```
+
 ## Цель проекта
 
 Код написан в образовательных целях на онлайн-курсе для веб-разработчиков [dvmn.org](https://dvmn.org/).
