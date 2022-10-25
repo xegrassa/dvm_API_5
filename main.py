@@ -27,7 +27,7 @@ BASE_HH_URL = "https://api.hh.ru"
 BASE_SJ_URL = "https://api.superjob.ru"
 
 
-def get_hh_vacancies(language, period=30):
+def get_hh_salaries_by_language(language, period=30):
     """Используя API HH, возвращает вакансии для Программиста определенного языка.
 
     Args:
@@ -42,7 +42,7 @@ def get_hh_vacancies(language, period=30):
     programming_role_id = 96  # "Программист, разработчик"
 
     endpoint = urllib.parse.urljoin(BASE_HH_URL, 'vacancies')
-    hh_vacancies = {
+    hh_salaries = {
         "found": None,
         "items": [],
     }
@@ -61,19 +61,19 @@ def get_hh_vacancies(language, period=30):
         response.raise_for_status()
 
         found_vacancies = response.json()
-        vacancies = [vacancy["salary"] for vacancy in found_vacancies["items"]]
+        vacancy_salaries = [vacancy["salary"] for vacancy in found_vacancies["items"]]
 
-        hh_vacancies["items"].extend(vacancies)
-        hh_vacancies["found"] = found_vacancies["found"]
+        hh_salaries["items"].extend(vacancy_salaries)
+        hh_salaries["found"] = found_vacancies["found"]
 
         page += 1
         if page >= found_vacancies["pages"]:
             break
 
-    return hh_vacancies
+    return hh_salaries
 
 
-def get_sj_vacancies(language, period=None):
+def get_sj_salaries_by_language(language, period=None):
     """Используя API HH, возвращает вакансии для Программиста определенного языка.
 
     Args:
@@ -89,7 +89,7 @@ def get_sj_vacancies(language, period=None):
     vacancy_on_page_count = 100
 
     endpoint = urllib.parse.urljoin(BASE_SJ_URL, '2.0/vacancies/?t=4&catalogues=48')
-    sj_vacancies = {
+    sj_salaries = {
         "found": None,
         "items": [],
     }
@@ -112,18 +112,18 @@ def get_sj_vacancies(language, period=None):
 
         found_vacancies = response.json()
 
-        vacancies = [{"payment_from": vacancy["payment_from"],
+        vacancy_salaries = [{"payment_from": vacancy["payment_from"],
                       "payment_to": vacancy["payment_to"],
                       "town": vacancy["town"]["title"]} for vacancy in found_vacancies["objects"]]
 
-        sj_vacancies["items"].extend(vacancies)
-        sj_vacancies["found"] = found_vacancies["total"]
+        sj_salaries["items"].extend(vacancy_salaries)
+        sj_salaries["found"] = found_vacancies["total"]
 
         if found_vacancies["more"] is False:
             break
         page += 1
 
-    return sj_vacancies
+    return sj_salaries
 
 
 def predict_rub_salary(salary_from, salary_to):
@@ -202,24 +202,24 @@ def print_beautiful_table(table_data, title):
     print(table_instance.table)
 
 
-def get_vacancies_stat(vacancies_getter: Callable, predict_salary: Callable) -> dict:
+def get_vacancies_stat(salary_getter: Callable, predict_salary: Callable) -> dict:
     """Создает структуру данных о языке прграммирования.
 
     Сколько таких вакансий найдено, сколько имеют данные о зарплате, средняя ЗП по языку.
 
     Args:
-        vacancies_getter: Функция для получения данных о вакансиях какого либо сайта
+        salary_getter: Функция для получения данных о вакансиях какого либо сайта
         predict_salary: Функция подсчета средней зарплаты вакансии с сайта
     """
     vacancy_statistics = defaultdict(dict)
     for language in LANGUAGES:
-        vacancies = vacancies_getter(language, period=30)
-        vacancies_with_salary = list(filter(None, map(predict_salary, vacancies["items"])))
+        salaries = salary_getter(language, period=30)
+        valid_salaries = list(filter(None, map(predict_salary, salaries["items"])))
 
-        vacancies_processed_count = len(vacancies_with_salary)
-        total_sum_salary = sum(vacancies_with_salary)
+        vacancies_processed_count = len(valid_salaries)
+        total_sum_salary = sum(valid_salaries)
 
-        vacancy_statistics[language]["vacancies_found"] = vacancies["found"]
+        vacancy_statistics[language]["vacancies_found"] = salaries["found"]
         vacancy_statistics[language]["vacancies_processed"] = vacancies_processed_count
 
         if vacancies_processed_count > 0:
@@ -232,13 +232,13 @@ def get_vacancies_stat(vacancies_getter: Callable, predict_salary: Callable) -> 
 
 def main():
     try:
-        hh_stat = get_vacancies_stat(get_hh_vacancies, predict_rub_salary_hh)
+        hh_stat = get_vacancies_stat(get_hh_salaries_by_language, predict_rub_salary_hh)
         print_beautiful_table(hh_stat, "HeadHunter Moscow")
     except HTTPError:
         print("При сборе статистики на сайте HH произошла ошибка!")
 
     try:
-        sj_stat = get_vacancies_stat(get_sj_vacancies, predict_rub_salary_sj)
+        sj_stat = get_vacancies_stat(get_sj_salaries_by_language, predict_rub_salary_sj)
         print_beautiful_table(sj_stat, "SuperJob Moscow")
     except HTTPError:
         print("При сборе статистики на сайте SJ произошла ошибка!")
