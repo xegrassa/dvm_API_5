@@ -1,3 +1,4 @@
+import functools
 import os
 import urllib.parse
 from collections import defaultdict
@@ -7,8 +8,6 @@ import requests
 from dotenv import load_dotenv
 from requests import HTTPError
 from terminaltables import SingleTable
-
-load_dotenv()
 
 LANGUAGES = (
     "TypeScript",
@@ -29,7 +28,6 @@ LANGUAGES = (
 
 BASE_HH_URL = "https://api.hh.ru"
 BASE_SJ_URL = "https://api.superjob.ru"
-SJ_TOKEN = os.getenv("SJ_TOKEN")
 
 
 def get_hh_salaries_by_language(language, period=30):
@@ -78,11 +76,12 @@ def get_hh_salaries_by_language(language, period=30):
     return hh_salaries
 
 
-def get_sj_salaries_by_language(language, period=None):
+def get_sj_salaries_by_language(language, token, period=None):
     """Используя API HH, возвращает вакансии для Программиста определенного языка.
 
     Args:
         language (str): Язык программирования по которому будет поиск вакансий
+        token (str): Токен для SJ сайта
         period (int|None): Количество дней, в пределах которых нужно найти вакансии
 
     Returns:
@@ -100,7 +99,7 @@ def get_sj_salaries_by_language(language, period=None):
     }
 
     headers = {
-        "X-Api-App-Id": SJ_TOKEN,
+        "X-Api-App-Id": token,
     }
 
     page = 0
@@ -236,6 +235,9 @@ def get_vacancies_stat(salary_getter: Callable, predict_salary: Callable) -> dic
 
 
 def main():
+    sj_token = os.getenv("SJ_TOKEN")
+    get_sj_salaries_with_token = functools.partial(get_sj_salaries_by_language, token=sj_token)
+
     try:
         hh_stat = get_vacancies_stat(get_hh_salaries_by_language, predict_rub_salary_hh)
         print_beautiful_table(hh_stat, "HeadHunter Moscow")
@@ -243,11 +245,12 @@ def main():
         print("При сборе статистики на сайте HH произошла ошибка!")
 
     try:
-        sj_stat = get_vacancies_stat(get_sj_salaries_by_language, predict_rub_salary_sj)
+        sj_stat = get_vacancies_stat(get_sj_salaries_with_token, predict_rub_salary_sj)
         print_beautiful_table(sj_stat, "SuperJob Moscow")
     except HTTPError:
         print("При сборе статистики на сайте SJ произошла ошибка!")
 
 
 if __name__ == '__main__':
+    load_dotenv()
     main()
