@@ -240,15 +240,17 @@ def main():
 
     try:
         hh_stat = get_vacancies_stat(get_hh_salaries_by_language, predict_rub_salary_hh)
-        print_beautiful_table(hh_stat, "HeadHunter Moscow")
     except HTTPError:
         print("При сборе статистики на сайте HH произошла ошибка!")
+    else:
+        print_beautiful_table(hh_stat, "HeadHunter Moscow")
 
     try:
         sj_stat = get_vacancies_stat(get_sj_salaries_with_token, predict_rub_salary_sj)
-        print_beautiful_table(sj_stat, "SuperJob Moscow")
     except HTTPError:
         print("При сборе статистики на сайте SJ произошла ошибка!")
+    else:
+        print_beautiful_table(sj_stat, "SuperJob Moscow")
 
 
 if __name__ == '__main__':
