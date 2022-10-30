@@ -123,7 +123,7 @@ def get_sj_salaries_by_language(language, token, period=None):
         sj_salaries["items"].extend(vacancy_salaries)
         sj_salaries["found"] = found_vacancies["total"]
 
-        if found_vacancies["more"] is False:
+        if not found_vacancies["more"]:
             break
         page += 1
 
