@@ -178,11 +178,11 @@ def predict_rub_salary_sj(vacancy):
     return int(predict_rub_salary(vacancy["payment_from"], vacancy["payment_to"]))
 
 
-def print_beautiful_table(table_data, title):
+def print_beautiful_table(statistics, title):
     """Выводит красивую табличку зарплат по языкам программирования.
 
     Args:
-        table_data (dict): Данные о языках и зарплатах.
+        statistics (dict): Данные о языках и зарплатах.
                            {
                             'Go': {
                                    'vacancies_found': int,
@@ -193,14 +193,14 @@ def print_beautiful_table(table_data, title):
                            }
         title (str): Заголовок для таблицы
     """
-    data = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
+    table_rows = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
 
-    for language, values in table_data.items():
-        data.append([language,
-                     values['vacancies_found'],
-                     values['vacancies_processed'],
-                     values['average_salary']])
-    table_instance = SingleTable(data, title)
+    for language, values in statistics.items():
+        table_rows.append([language,
+                           values['vacancies_found'],
+                           values['vacancies_processed'],
+                           values['average_salary']])
+    table_instance = SingleTable(table_rows, title)
     print(table_instance.table)
 
 
