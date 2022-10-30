@@ -226,7 +226,7 @@ def get_vacancies_stat(salary_getter: Callable, predict_salary: Callable) -> dic
         vacancy_statistics[language]["vacancies_found"] = salaries["found"]
         vacancy_statistics[language]["vacancies_processed"] = vacancies_processed_count
 
-        if vacancies_processed_count > 0:
+        if vacancies_processed_count:
             vacancy_statistics[language]["average_salary"] = int(total_sum_salary / vacancies_processed_count)
         else:
             vacancy_statistics[language]["average_salary"] = 0
