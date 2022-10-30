@@ -159,9 +159,7 @@ def predict_rub_salary_hh(vacancy):
     Returns:
         int|None: Средняя зарплата или None если в вакансии нет никаких данных о зарплате
     """
-    if vacancy is None:
-        return None
-    if not vacancy.get("currency") == "RUR":
+    if not vacancy or not vacancy.get("currency") == "RUR":
         return None
     return int(predict_rub_salary(vacancy.get("from"), vacancy.get("to")))
 
