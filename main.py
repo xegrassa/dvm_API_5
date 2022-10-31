@@ -233,6 +233,8 @@ def get_vacancies_stat(salary_getter: Callable, predict_salary: Callable) -> dic
 
 
 def main():
+    load_dotenv()
+
     sj_token = os.getenv("SJ_TOKEN")
     get_sj_salaries_with_token = functools.partial(get_sj_salaries_by_language, token=sj_token)
 
@@ -252,5 +254,4 @@ def main():
 
 
 if __name__ == '__main__':
-    load_dotenv()
     main()
